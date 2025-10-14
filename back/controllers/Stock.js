@@ -88,9 +88,21 @@ const verProductosVencidos = (req,res) => {
                     })
 }
 
+// Ejemplo de uso de parámetros preparados para una consulta de actualización
+const actualizarMetodoPago = (req, res) => {
+  const { nombre_metodopago, Id_metodoPago } = req.body;
 
+  connection.query(
+    'UPDATE metodopago SET nombre_metodopago = ? WHERE Id_metodoPago = ?',
+    [nombre_metodopago, Id_metodoPago],
+    (error, results) => {
+      if (error) throw error;
+      res.json({ message: 'Método de pago actualizado correctamente' });
+    }
+  );
+}
 
-module.exports = {verStock, verTotalProductoCategorias, verProductosVencidos}
+module.exports = {verStock, verTotalProductoCategorias, verProductosVencidos, actualizarMetodoPago}
 
 
 
