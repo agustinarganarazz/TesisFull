@@ -37,3 +37,6 @@ coverage/
 # Misc
 *.bak
 *.tmp
+
+# Env
+.env
