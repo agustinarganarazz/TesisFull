@@ -15,6 +15,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
+
 const sequelize = new Sequelize("dbfarmacia", "root", "agustin1", {
   host: "localhost",
   dialect: "mysql",
@@ -67,7 +68,6 @@ app.use("/api/detalleventa", DetalleVenta);
 app.use("/api/credito", Credito);
 app.use("/api/caja", Caja);
 
-app.listen(3001);
 
 connection.connect((error) => {
   if (error) throw error;
