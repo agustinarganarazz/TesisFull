@@ -1,49 +1,47 @@
 const { connection } = require("../database/config");
 
-const verCategoria = (req, res) => {
+const verCategoria = (req, res, next) => {
   connection.query("SELECT * FROM categoria WHERE Estado = 1", (error, results) => {
-    if (error) throw error;
-    res.json(results);
+    if (error) return next(error);
+    res.json({ message: "Categoria eliminada con exito", results });
   });
 };
 
-const crearCategoria = (req, res) => {
+const crearCategoria = (req, res, next) => {
   connection.query(
     "INSERT INTO categoria SET ?",
     {
       nombre_categoria: req.body.nombre_categoria
     },
     (error, results) => {
-      if (error) throw error;
-      res.json("Categoria creada con exito");
+      if (error) return next(error);
+      res.json({ message: "Categoria creada con exito" });
     }
   );
 };
 
-const editarCategoria = (req, res) => {
+const editarCategoria = (req, res, next) => {
   const Id_categoria = req.params.Id_categoria;
   const { nombre_categoria } = req.body;
   connection.query(
-    `UPDATE categoria SET  
-                            nombre_categoria='${nombre_categoria}' 
-                            WHERE Id_categoria = ${Id_categoria}`,
-      (error, results) => {
-      if (error) throw error;
-      res.json("registro editado");
+    "UPDATE categoria SET nombre_categoria = ? WHERE Id_categoria = ?",
+    [nombre_categoria, Id_categoria],
+    (error, results) => {
+      if (error) return next(error);
+      res.json({ message: "registro editado" });
     }
   );
 };
 
-
-
-const eliminarCategoria = (req,res)=>{
-    const Id_categoria = req.params.Id_categoria
-    connection.query('UPDATE categoria SET Estado = 0 WHERE Id_categoria =' + Id_categoria,                                     
-        (error,results)=>{
-            if(error)throw error
-            res.json(results)
+const eliminarCategoria = (req, res, next) => {
+    const Id_categoria = req.params.Id_categoria;
+    connection.query(
+        'UPDATE categoria SET Estado = 0 WHERE Id_categoria = ?',
+        [Id_categoria],
+        (error, results) => {
+            if (error) return next(error);
+            res.json(results);
         }
-    )
-}
-
-module.exports = {verCategoria,crearCategoria,editarCategoria,eliminarCategoria}
+    );
+};
+module.exports = { verCategoria, crearCategoria, editarCategoria, eliminarCategoria };
