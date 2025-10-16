@@ -1,27 +1,34 @@
-const {connection} = require('../database/config.js')
+const { connection } = require("../database/config.js");
 
+const movimientosclientes = (req, res, next) => {
+  console.log("Body recibido movimiento:", req.body);
+  connection.query(
+    "INSERT INTO movimientosclientes SET ?",
+    {
+      Id_cliente: req.body.Id_cliente,
+      montoCredito: req.body.montoCredito,
+      montoDebito: req.body.montoDebito,
+      Saldo: req.body.Saldo,
+      Id_venta: req.body.Id_venta,
+    },
+    (error, results) => {
+      if (error) return next(error);
+      res.json({
+        messaje: "Movimiento registrado con exito",
+        results,
+        status: 200,
+      });
+    }
+  );
+};
 
-const movimientosclientes = (req,res) =>{
-   console.log('Body recibido movimiento:', req.body);
-  connection.query("INSERT INTO movimientosclientes SET ?",{
-    Id_cliente: req.body.Id_cliente,
-    montoCredito: req.body.montoCredito,
-    montoDebito: req.body.montoDebito,
-    Saldo: req.body.Saldo,
-    Id_venta: req.body.Id_venta
-  },(error,results)=>{
-    if(error) throw error
-    res.json(results)
-  })
-}
-
-const verElCreditoCompleto = (req, res) => {
+const verElCreditoCompleto = (req, res, next) => {
   const Id_cliente = req.params.Id_cliente;
   connection.query(
-    `SELECT v.Id_venta, v.precioTotal_Venta, v.fecha_registro, v.faltaPagar, 
-            c.Id_cliente, c.nombre_cliente, c.monto_credito, 
+    `SELECT v.Id_venta, v.precioTotal_Venta, v.fecha_registro, v.faltaPagar,
+            c.Id_cliente, c.nombre_cliente, c.monto_credito,
             mp.nombre_metodopago, c.telefono_cliente, c.domicilio_cliente,
-            p.Id_producto, p.nombre_producto, p.precio_caja, 
+            p.Id_producto, p.nombre_producto, p.precio_caja,
             dv.cantidadVendida, dv.Id_detalleventa, dv.tipoVenta, dv.precioAplicado,
                     u.nombre_usuario
             FROM venta v
@@ -36,9 +43,7 @@ const verElCreditoCompleto = (req, res) => {
     [Id_cliente],
     (error, results) => {
       if (error) {
-        console.error('Error al obtener las ventas del cliente', error);
-        res.status(500).send('Error interno del servidor al obtener las ventas');
-        return;
+        return next("Error al obtener las ventas del cliente", error);
       }
 
       // Agrupar productos por Id_venta
@@ -82,7 +87,7 @@ const verElCreditoCompleto = (req, res) => {
             cantidadVendida: item.cantidadVendida,
             Id_detalleventa: item.Id_detalleventa,
             precioAplicado: item.precioAplicado,
-            tipoVenta: item.tipoVenta
+            tipoVenta: item.tipoVenta,
           });
         }
         return acc;
@@ -95,21 +100,26 @@ const verElCreditoCompleto = (req, res) => {
   );
 };
 
-const registrarPago = (req,res) => {
-  connection.query('INSERT INTO pagosclientes SET ?',   
-  {
-    Id_pago: req.body.Id_pago,
-    Id_cliente: req.body.Id_cliente,
-    Id_venta: req.body.Id_venta,
-    Id_metodoPago: req.body.Id_metodoPago,
-    Id_usuario: req.body.Id_usuario,
-    monto: req.body.monto,
-    observacion: 'test'
-  }, (error,results) => {
-    if (error) throw error
-    res.json(results)
-  })
-} 
+const registrarPago = (req, res, next) => {
+  connection.query(
+    "INSERT INTO pagosclientes SET ?",
+    {
+      Id_pago: req.body.Id_pago,
+      Id_cliente: req.body.Id_cliente,
+      Id_venta: req.body.Id_venta,
+      Id_metodoPago: req.body.Id_metodoPago,
+      Id_usuario: req.body.Id_usuario,
+      monto: req.body.monto,
+      observacion: "test",
+    },
+    (error, results) => {
+      if (error) return next(error);
+      res.json({
+        message: "Pago registrado con éxito",
+        results,
+      });
+    }
+  );
+};
 
-
-module.exports = {movimientosclientes, verElCreditoCompleto,registrarPago}
+module.exports = { movimientosclientes, verElCreditoCompleto, registrarPago };

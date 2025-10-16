@@ -1,6 +1,6 @@
 const { connection } = require("../database/config");
 
-const verStock = (req, res) => {
+const verStock = (req, res, next) => {
   connection.query(
     `SELECT
         p.Id_producto,
@@ -14,13 +14,13 @@ const verStock = (req, res) => {
       JOIN (
         SELECT Id_producto, SUM(cantidad_disponible) AS total_disponible
         FROM lotes
-        WHERE fecha_vencimiento >= CURDATE()  
+        WHERE fecha_vencimiento >= CURDATE()
         GROUP BY Id_producto
       ) total_por_producto ON total_por_producto.Id_producto = p.Id_producto
       WHERE l.cantidad_disponible > 0
       ORDER BY total_por_producto.total_disponible DESC, p.nombre_producto ASC, l.fecha_vencimiento ASC`,
     (error, results) => {
-      if (error) throw error;
+      if (error) return next(error);
 
       //creo un objeto vacio donde agrupar los productos por nombre
       const agrupado = {};
@@ -51,13 +51,13 @@ const verStock = (req, res) => {
         });
       });
 
-      res.json(agrupado);
+      res.json({ messaje: 'Stock obtenido con exito', results: Object.values(agrupado), status: 200 } );
     }
   );
 };
 
-const verTotalProductoCategorias = (req,res) => {
-  connection.query(`SELECT 
+const verTotalProductoCategorias = (req,res,next) => {
+  connection.query(`SELECT
                           c.nombre_categoria,
                           SUM(l.cantidad_disponible) AS total_disponible
                       FROM lotes l
@@ -67,13 +67,13 @@ const verTotalProductoCategorias = (req,res) => {
                         AND l.cantidad_disponible > 0
                       GROUP BY c.nombre_categoria
                       ORDER BY total_disponible DESC, c.nombre_categoria ASC`, (error,results) => {
-                      if (error) throw error
-                      res.json(results)
+                      if (error) return next(error);
+                      res.json({ messaje: 'Total por categoría obtenido con éxito', results, status: 200 });
                     })
 }
 
-const verProductosVencidos = (req,res) => {
-  connection.query(`SELECT 
+const verProductosVencidos = (req,res,next) => {
+  connection.query(`SELECT
                         p.Id_producto,
                         p.nombre_producto,
                         SUM(l.cantidad_disponible) AS total_vencido
@@ -83,26 +83,23 @@ const verProductosVencidos = (req,res) => {
                       AND l.cantidad_disponible > 0
                     GROUP BY p.Id_producto, p.nombre_producto
                     ORDER BY total_vencido DESC, p.nombre_producto ASC`,(error,results) => {
-                      if (error) throw error
-                      res.json(results)
+                      if (error) return next(error);
+                      res.json({ messaje: 'Productos vencidos obtenidos con éxito', results, status: 200 });
                     })
 }
 
 // Ejemplo de uso de parámetros preparados para una consulta de actualización
-const actualizarMetodoPago = (req, res) => {
+const actualizarMetodoPago = (req, res, next) => {
   const { nombre_metodopago, Id_metodoPago } = req.body;
 
   connection.query(
     'UPDATE metodopago SET nombre_metodopago = ? WHERE Id_metodoPago = ?',
     [nombre_metodopago, Id_metodoPago],
     (error, results) => {
-      if (error) throw error;
-      res.json({ message: 'Método de pago actualizado correctamente' });
+      if (error) return next(error);
+      res.json({ message: 'Método de pago actualizado correctamente', status: 200 });
     }
   );
 }
 
 module.exports = {verStock, verTotalProductoCategorias, verProductosVencidos, actualizarMetodoPago}
-
-
-

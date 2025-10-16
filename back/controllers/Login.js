@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 // Para hashear contraseñas
 const bcrypt = require("bcrypt");
 
-const login =async (req, res) => {
+const login = async (req, res, next) => {
   const nombre_usuario = req.body.nombre_usuario;
   const clave = req.body.clave;
 
@@ -12,8 +12,7 @@ const login =async (req, res) => {
     [nombre_usuario],
     async (error, result) => {
       if (error) {
-        console.error("Error al ejecutar la consulta SQL:", error);
-        return res.status(500).send("Error interno del servidor");
+        return next("Error al ejecutar la consulta SQL:", error);
       }
 
       if (result.length > 0) {

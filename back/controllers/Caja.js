@@ -1,14 +1,14 @@
 const { connection } = require("../database/config");
 
 
-const registrarAperturaCaja  = (req,res) => {
+const registrarAperturaCaja  = (req,res,next) => {
     connection.query('INSERT INTO aperturas_caja SET ?',
         {
             Id_usuario: req.body.id_usuario,
             monto_inicial: req.body.monto_inicial
         },(error,results) => {
             if (error)  {
-                console.error(error)
+                next(error)
                 return res.status(500).json({error: 'Error  al registrar apertura de caja'})
             }
             res.json({message: 'Ingreso de plata registrado con exito', Id_apertura: results.insertId})
@@ -16,7 +16,7 @@ const registrarAperturaCaja  = (req,res) => {
 }
 
 const registrarCierreCaja = (req,res)  => {
-    
+
     const { Id_apertura, monto_esperado, monto_ventas, monto_real, diferencia } = req.body;
     connection.query('INSERT INTO cierres_caja SET ?',
         {
@@ -37,7 +37,7 @@ const registrarCierreCaja = (req,res)  => {
 
 const totalVentasDia = (req, res) => {
     const idUsuario = req.params.idUsuario;
-    const idApertura = req.params.idApertura; 
+    const idApertura = req.params.idApertura;
 
     //1) - Ventas del usuario: Suma todo lo que vendió ese usuario, siempre que no haya usado el metodo de pago con Id 5 (a credito),solo cuenta las ventas hechas desde la fecha de apertura de caja indicada
     //2) - Pagos de clientes: Suma todos los pagos de clientes, solo los que se hicieron desde la apertura de caja,
@@ -50,15 +50,15 @@ const totalVentasDia = (req, res) => {
                  FROM venta
                  WHERE Id_usuario = ?
                    AND Id_metodoPago != 5
-                   AND fecha_registro >= (SELECT fecha_apertura 
-                                          FROM aperturas_caja 
+                   AND fecha_registro >= (SELECT fecha_apertura
+                                          FROM aperturas_caja
                                           WHERE Id_apertura = ?)), 0)
         +
             IFNULL(
                 (SELECT SUM(monto)
                  FROM pagosclientes
-                 WHERE fecha_pago >= (SELECT fecha_apertura 
-                                      FROM aperturas_caja 
+                 WHERE fecha_pago >= (SELECT fecha_apertura
+                                      FROM aperturas_caja
                                       WHERE Id_apertura = ?)), 0)
         +
             IFNULL(

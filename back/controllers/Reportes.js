@@ -1,8 +1,8 @@
 const {connection} = require('../database/config.js')
 
-const verTotalDrogueria = (req,res) => {
+const verTotalDrogueria = (req,res, next) => {
     const { fechaInicio, fechaFin} = req.query
-    connection.query(`SELECT 
+    connection.query(`SELECT
                         d.nombre_drogueria,
                         COUNT(*) AS cantidad_compras,
                         SUM(c.Total) AS total_comprado
@@ -11,29 +11,29 @@ const verTotalDrogueria = (req,res) => {
                         WHERE DATE (c.Fecha_registro) BETWEEN ? AND ?
                         AND c.Estado = 1
                         GROUP BY d.nombre_drogueria
-                        ORDER BY total_comprado DESC`, 
+                        ORDER BY total_comprado DESC`,
                             [fechaInicio, fechaFin], (error,results) => {
-                            if (error) throw error
-                            res.json(results)
+                            if (error) return next(error)
+                            res.json({messaje: 'Total por droguería obtenido con éxito', results, status: 200})
                         })
 }
 
-const verMontoTotalComprado = (req,res) => {
+const verMontoTotalComprado = (req,res,next) => {
     const { fechaInicio, fechaFin } = req.query
-    connection.query(`SELECT 
+    connection.query(`SELECT
                         SUM(c.Total) AS total_comprado
                         FROM compra c
                         JOIN droguerias d ON c.Id_drogueria = d.Id_drogueria
                         WHERE DATE (c.Fecha_registro) BETWEEN ? AND ?
                         AND c.Estado = 1`,[fechaInicio,fechaFin],(error,results) => {
-                            if (error) throw error
-                            res.json(results)
+                            if (error) return next(error)
+                            res.json({messaje: 'Monto total comprado obtenido con éxito', results, status: 200})
                         })
 }
 
-const verTopProductosComprados  = (req,res) => {
+const verTopProductosComprados  = (req,res,next) => {
     const { fechaInicio, fechaFin } = req.query
-    connection.query(`SELECT 
+    connection.query(`SELECT
                         p.nombre_producto,
                         SUM(dc.Cantidad) AS total_cantidad
                         FROM detallecompra dc
@@ -43,20 +43,20 @@ const verTopProductosComprados  = (req,res) => {
                         GROUP BY p.nombre_producto
                         ORDER BY total_cantidad DESC
                         LIMIT 5`, [fechaInicio, fechaFin], (error,results) => {
-                            if (error) throw error
-                            res.json(results)
+                            if (error) return next(error)
+                            res.json({messaje: 'Top 5 productos comprados obtenidos con éxito', results, status: 200})
                         })
 }
 
-const verPromedioGasto = (req,res) => {
+const verPromedioGasto = (req,res,next) => {
     const { fechaInicio, fechaFin } = req.query
-    connection.query(`SELECT 
+    connection.query(`SELECT
                         AVG(c.Total) AS promedio_gasto
                         FROM compra c
                         WHERE DATE(c.Fecha_registro) BETWEEN ? AND ?
                         AND c.Estado = 1`, [fechaInicio, fechaFin], (error,results) => {
-                            if (error) throw error
-                            res.json(results)
+                            if (error) return next(error)
+                            res.json({messaje: 'Promedio de gasto obtenido con éxito', results, status: 200})
                         })
 }
 

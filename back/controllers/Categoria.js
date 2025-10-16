@@ -11,7 +11,7 @@ const crearCategoria = (req, res, next) => {
   connection.query(
     "INSERT INTO categoria SET ?",
     {
-      nombre_categoria: req.body.nombre_categoria
+      nombre_categoria: req.body.nombre_categoria,
     },
     (error, results) => {
       if (error) return next(error);

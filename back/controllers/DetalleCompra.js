@@ -1,23 +1,30 @@
 const { connection } = require("../database/config");
 
-const registrarDetalleCompra = (req,res) => {
-    const { Id_compra, Id_producto, Cantidad, Precio_costo} = req.body
-    connection.query('INSERT INTO detallecompra SET ?',
+const registrarDetalleCompra = (req, res, next) => {
+  const { Id_compra, Id_producto, Cantidad, Precio_costo } = req.body;
+  connection.query(
+    "INSERT INTO detallecompra SET ?",
     {
-        Id_compra: Id_compra,
-        Id_producto: Id_producto,
-        Cantidad : Cantidad,
-        Precio_costo: Precio_costo,
-    }, (error,results) => {
-        if (error) throw error
-        res.json(results)
+      Id_compra: Id_compra,
+      Id_producto: Id_producto,
+      Cantidad: Cantidad,
+      Precio_costo: Precio_costo,
+    },
+    (error, results) => {
+      if (error) return next(error);
+      res.json({
+        messaje: "Detalle de compra registrado con exito",
+        results,
+        status: 200,
+      });
     }
-)} 
+  );
+};
 
-
-const verDetalleCompraCompletoAgrupado = (req, res) => {
-  connection.query(`
-    SELECT 
+const verDetalleCompraCompletoAgrupado = (req, res, next) => {
+  connection.query(
+    `
+    SELECT
       c.Id_compra,
       c.fecha_registro,
       c.Total,
@@ -33,46 +40,55 @@ const verDetalleCompraCompletoAgrupado = (req, res) => {
     INNER JOIN productos p ON p.Id_producto = dc.Id_producto
     INNER JOIN droguerias dr ON dr.Id_drogueria = c.Id_drogueria
     ORDER BY c.Id_compra DESC, dc.Id_detalleCompra
-  `, (error, results) => {
-    if (error) {
-      console.error('Error al traer los detalles de compra:', error);
-      return res.status(500).json({ error: 'Error interno del servidor' });
-    }
-
-    const comprasAgrupadas = results.reduce((acc, item) => {
-      if (!acc[item.Id_compra]) {
-        acc[item.Id_compra] = {
-          Id_compra: item.Id_compra,
-          fecha_registro: item.fecha_registro,
-          precio_total: item.Total,
-          nombre_drogueria: item.nombre_drogueria,
-          productos: []
-        };
+  `,
+    (error, results) => {
+      if (error) {
+        next("Error al traer los detalles de compra:", error);
+        return res.status(500).json({ error: "Error interno del servidor" });
       }
 
-      acc[item.Id_compra].productos.push({
-        Id_detalleCompra: item.Id_detalleCompra,
-        Id_producto: item.Id_producto,
-        nombre_producto: item.nombre_producto,
-        Cantidad: item.Cantidad,
-        Precio_costo: item.Precio_costo,
-        Fecha_registro: item.Fecha_registro
+      const comprasAgrupadas = results.reduce((acc, item) => {
+        if (!acc[item.Id_compra]) {
+          acc[item.Id_compra] = {
+            Id_compra: item.Id_compra,
+            fecha_registro: item.fecha_registro,
+            precio_total: item.Total,
+            nombre_drogueria: item.nombre_drogueria,
+            productos: [],
+          };
+        }
+
+        acc[item.Id_compra].productos.push({
+          Id_detalleCompra: item.Id_detalleCompra,
+          Id_producto: item.Id_producto,
+          nombre_producto: item.nombre_producto,
+          Cantidad: item.Cantidad,
+          Precio_costo: item.Precio_costo,
+          Fecha_registro: item.Fecha_registro,
+        });
+
+        return acc;
+      }, {});
+
+      const compras = Object.values(comprasAgrupadas);
+      res.json({
+        messaje: "Detalle de compra obtenido con exito",
+        results: compras,
+        status: 200,
       });
-
-      return acc;
-    }, {});
-
-    const compras = Object.values(comprasAgrupadas);
-    res.json(compras);
-  });
+    }
+  );
 };
 
-const verTotalCompras = (req,res) => {
-  connection.query(`SELECT SUM(c.Total) AS total_compras FROM compra c`,(error,results) => {
-    if (error) throw error
-    res.json(results)
-  })
-}
+const verTotalCompras = (req, res, next) => {
+  connection.query(
+    `SELECT SUM(c.Total) AS total_compras FROM compra c`,
+    (error, results) => {
+      if (error) return next(error);
+      res.json({messaje: "Total de compras obtenido con exito", total_compras: results[0].total_compras });
+    }
+  );
+};
 
 // const verDetalleCompraCompleto = (req,res) => {
 //     connection.query('SELECT dc.*, p.nombre_producto FROM detallecompra dc INNER JOIN productos p ON dc.Id_producto = p.Id_producto ORDER BY dc.Id_compra;', (error,results) => {
@@ -81,4 +97,8 @@ const verTotalCompras = (req,res) => {
 //     })
 // }
 
-module.exports = {registrarDetalleCompra,verDetalleCompraCompletoAgrupado,verTotalCompras}
+module.exports = {
+  registrarDetalleCompra,
+  verDetalleCompraCompletoAgrupado,
+  verTotalCompras,
+};

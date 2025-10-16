@@ -1,14 +1,14 @@
 const {connection} = require('../database/config.js')
 
-const verProductos = (req,res) => {
+const verProductos = (req,res,next) => {
     connection.query('SELECT p.*, c.nombre_categoria FROM productos p JOIN categoria c ON p.Id_categoria = c.Id_categoria WHERE p.Estado = 1',
         (error,results) => {
-        if(error) throw error
-        res.json(results)
+        if(error) return next(error)
+        res.json({messaje: 'Productos obtenidos con exito', results, status: 200})
     })
 }
 
-const crearProductos = (req,res) => {
+const crearProductos = (req,res,next) => {
     connection.query('INSERT INTO productos SET ?', {
         Id_producto: req.body.Id_producto,
         nombre_producto: req.body.nombre_producto,
@@ -21,45 +21,46 @@ const crearProductos = (req,res) => {
         Id_categoria: req.body.Id_categoria,
         Estado : 1
     }, (error,results) => {
-        if (error) throw error
-        res.json(results)
+        if (error) return next(error)
+        res.json({messaje: 'Producto creado con exito', results, status: 200} )
     })
 }
 
-const editarProducto = (req, res) => {
+const editarProducto = (req, res, next) => {
     const Id_producto = req.params.Id_producto
     const {nombre_producto,precio_unitario,precio_costo,precio_tira,precio_caja,codigobarras_producto,inventario_minimo, Id_categoria} = req.body;
     connection.query(
-      `UPDATE productos SET 
-                          nombre_producto='${nombre_producto}',
-                          precio_unitario='${precio_unitario}',
-                          precio_costo='${precio_costo}',
-                          precio_tira='${precio_tira}',
-                          precio_caja='${precio_caja}',
-                          codigobarras_producto='${codigobarras_producto}',
-                          inventario_minimo='${inventario_minimo}',
-                          Id_categoria='${Id_categoria}'
-                          WHERE Id_producto = ${Id_producto}`
+      `UPDATE productos SET
+                          nombre_producto=?,
+                          precio_unitario=?,
+                          precio_costo=?,
+                          precio_tira=?,
+                          precio_caja=?,
+                          codigobarras_producto=?,
+                          inventario_minimo=?,
+                          Id_categoria=?
+                          WHERE Id_producto = ?`
+                          ,[nombre_producto, precio_unitario, precio_costo, precio_tira, precio_caja, codigobarras_producto, inventario_minimo, Id_categoria, Id_producto]
                           ,(error, results)=>{
-                                 if(error)throw error
-                                  res.json('producto editado')
+                                 if(error) return next(error)
+                                  res.json({messaje: 'Producto editado con exito', results, status: 200} )
                               }
                           )
   };
-  
 
-const eliminarProductos = (req,res) => {
+
+const eliminarProductos = (req,res,next) => {
     const Id_producto = req.params.Id_producto
-    connection.query('UPDATE productos SET Estado = 0 WHERE Id_producto=' + Id_producto,
+    connection.query('UPDATE productos SET Estado = 0 WHERE Id_producto= ?', [Id_producto],
         (error,results) => {
-            if(error) throw error
-            res.json(results)
+            if(error) return next(error)
+            res.json({messaje: 'Producto eliminado con exito', results, status: 200})
         }
     )
 }
 
-const productosConStock = (req,res) => {
-    connection.query(`SELECT 
+const productosConStock = (req,res,next) => {
+    connection.query(`SELECT
                         l.Id_lote,
                         l.Id_producto,
                         p.nombre_producto,
@@ -74,15 +75,15 @@ const productosConStock = (req,res) => {
                         JOIN productos p ON l.Id_producto = p.Id_producto
                         WHERE l.cantidad_disponible > 0
                         ORDER BY l.Id_producto, l.fecha_vencimiento ASC`,(error,results) => {
-                            if (error) throw error
-                            res.json(results)
+                            if (error) return next(error)
+                            res.json({messaje: 'Productos con stock obtenidos con exito', results, status: 200})
                         })
 }
 
 //PRUEBA
-const buscarProductos = (req, res) => {
+const buscarProductos = (req, res, next) => {
     const { texto } = req.params;
-    connection.query(`SELECT 
+    connection.query(`SELECT
                             l.Id_lote,
                             l.Id_producto,
                             p.nombre_producto,
@@ -100,8 +101,8 @@ const buscarProductos = (req, res) => {
                         AND (p.nombre_producto LIKE ? OR p.codigobarras_producto LIKE ?)
                         ORDER BY l.Id_producto, l.fecha_vencimiento ASC`,[`%${texto}%`, `%${texto}%`],
                         (error, results) => {
-                            if (error) throw error;
-                            res.json(results);
+                            if (error) return next(error);
+                            res.json({messaje: 'Productos encontrados con exito', results, status: 200});
                         }
     );
 };
