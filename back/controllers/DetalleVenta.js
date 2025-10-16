@@ -1,8 +1,8 @@
 const { connection } = require("../database/config");
 
-const verDetalleVentaCompletoAgrupado = (req, res) => {
+const verDetalleVentaCompletoAgrupado = (req, res,next) => {
   connection.query(`
-SELECT 
+SELECT
       v.Id_venta,
       v.fecha_registro,
       v.precioTotal_Venta,
@@ -26,7 +26,7 @@ SELECT
     ORDER BY v.Id_venta DESC, dv.Id_detalleventa
   `, (error, results) => {
     if (error) {
-      console.error('Error al traer los detalles de venta:', error);
+      next('Error al traer los detalles de venta:', error);
       return res.status(500).json({ error: 'Error interno del servidor' });
     }
 
