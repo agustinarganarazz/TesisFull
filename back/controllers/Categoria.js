@@ -3,7 +3,7 @@ const { connection } = require("../database/config");
 const verCategoria = (req, res, next) => {
   connection.query("SELECT * FROM categoria WHERE Estado = 1", (error, results) => {
     if (error) return next(error);
-    res.json({ message: "Categoria eliminada con exito", results });
+    res.json({ message: "Categoria obtenida con exito", results });
   });
 };
 
@@ -15,7 +15,7 @@ const crearCategoria = (req, res, next) => {
     },
     (error, results) => {
       if (error) return next(error);
-      res.json({ message: "Categoria creada con exito" });
+      res.json({ message: "Categoria creada con exito" , result: results , status: 200});
     }
   );
 };
@@ -28,7 +28,7 @@ const editarCategoria = (req, res, next) => {
     [nombre_categoria, Id_categoria],
     (error, results) => {
       if (error) return next(error);
-      res.json({ message: "registro editado" });
+      res.json({ message: "registro editado" , result: results , status: 200});
     }
   );
 };
@@ -40,7 +40,7 @@ const eliminarCategoria = (req, res, next) => {
         [Id_categoria],
         (error, results) => {
             if (error) return next(error);
-            res.json(results);
+            res.json({ message: 'Categoria eliminada con exito', result: results, status: 200 });
         }
     );
 };
